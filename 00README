@@ -1,0 +1,1 @@
+This is intended as a replacement for the existing _renderPM module which does the low level rendering for reportlab.graphics.renderPM.
