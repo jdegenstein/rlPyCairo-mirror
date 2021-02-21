@@ -28,6 +28,26 @@ class GState:
         self.pathFill()
         self.pathBegin()
         self.__fillColor = self.__strokeColor = None
+        def _text2PathDescription(text, x, y):
+            from reportlab.graphics._renderPM import gstate
+            from reportlab.graphics.utils import text2PathDescription
+            gs = gstate(1,1)
+            def _text2PathDescription(text, x, y):
+                return text2PathDescription(
+                                text, x=x, y=y,
+                                fontName=self.fontName, fontSize= self.fontSize,
+                                truncate=False, gs=gs,
+                                )
+            self._text2PathDescription = _text2PathDescription
+            return _text2PathDescription(text, x, y)
+        self._text2PathDescription = _text2PathDescription
+        self.__pathOpMap__ = dict(
+                moveTo=canv.move_to,
+                lineTo=canv.line_to,
+                curveTo=canv.curve_to,
+                closePath=canv.close_path,
+                )
+        self.textRenderMode = 0
 
     @property
     def pixBuf(self):
@@ -65,7 +85,6 @@ class GState:
 
     @strokeColor.setter
     def strokeColor(self,c):
-        print(f'{self.__strokeColor=}')
         self.__strokeColor = toColor(c) if c is not None else c
 
     @property
@@ -74,7 +93,6 @@ class GState:
 
     @strokeWidth.setter
     def strokeWidth(self, w):
-        print(f'strokeWidth={w}')
         return self.canv.set_line_width(w)
 
     @property
@@ -135,7 +153,6 @@ class GState:
             if fillMode is not None and ofm!=fillMode: self.fillMode = ofm
 
     def pathStroke(self):
-        print(f'{self.__strokeColor=} {self.strokeWidth=}')
         if self.__strokeColor and self.strokeWidth>0:
             self.__set_source_color__(self.__strokeColor)
             self.canv.stroke_preserve()
@@ -146,6 +163,37 @@ class GState:
     def pathBegin(self):
         self.canv.new_path()
 
+    def clipPathClear(self):
+        raise NotImplementedError('clipPathClear')
+
+    def clipPathSet(self):
+        raise NotImplementedError('clipPathSet')
+
+    def clipPathAdd(self):
+        raise NotImplementedError('clipPathAdd')
+
     def setFont(self, fontName, fontSize):
         self.fontName = fontName
         self.fontSize = fontSize
+
+    def drawString(self, x, y, text): 
+        opMap = self.__pathOpMap__
+        P = self._text2PathDescription(text, x, y)
+        oPath = self.canv.copy_path()
+        oFM = self.fillMode
+        tRM = self.textRenderMode
+        try:
+            self.canv.new_path()
+            for op in P:
+                #call one of canv.move_to/line_to/curve_to/close_path
+                opMap[op[0]](*op[1:])
+            if tRM in (0,2,4,6):
+                self.pathFill(0)
+            if tRM in (1,2,5,6):
+                self.pathStroke()
+            if tRM>=4:
+                self.canv.clip_preserve()
+        finally:
+            self.canv.new_path()
+            self.canv.append_path(oPath)
+            self.fillMode = oFM
