@@ -7,24 +7,25 @@ from reportlab.graphics.transform import mmult, inverse
 
 class GState:
     __fill_rule_values = {1:0, 0:1}
+
     def __init__(self, width=1, height=1, bg='white', fmt='RGB24'):
         self._fmt = fmt
         self.surface = cairo.ImageSurface(getattr(cairo,'FORMAT_'+fmt), width, height)
         self.width = width
         self.height = height
-        self.canv = canv = cairo.Context(self.surface)
+        self.ctx = ctx = cairo.Context(self.surface)
         if fmt=='RGB24':
-            self.__set_source_color__ = lambda c:canv.set_source_rgb(*c.rgb())
+            self.__set_source_color__ = lambda c:ctx.set_source_rgb(*c.rgb())
         elif fmt=='ARGB32':
-            self.__set_source_color__ = lambda c:canv.set_source_rgba(*c.rgba())
+            self.__set_source_color__ = lambda c:ctx.set_source_rgba(*c.rgba())
         else:
             raise ValueError('Bad fmt=%r for rlPyCairo.GState' % fmt)
-        canv.set_antialias(cairo.Antialias.BEST)
+        ctx.set_antialias(cairo.Antialias.BEST)
         self._in_transform = (1,0,0,-1,0,height)
         self._out_transform = inverse(self._in_transform)
         self.ctm = (1,0,0,1,0,0)
         self.fillColor = bg
-        canv.rectangle(0,0,width,height)
+        ctx.rectangle(0,0,width,height)
         self.pathFill()
         self.pathBegin()
         self.__fillColor = self.__strokeColor = None
@@ -42,10 +43,10 @@ class GState:
             return _text2PathDescription(text, x, y)
         self._text2PathDescription = _text2PathDescription
         self.__pathOpMap__ = dict(
-                moveTo=canv.move_to,
-                lineTo=canv.line_to,
-                curveTo=canv.curve_to,
-                closePath=canv.close_path,
+                moveTo=ctx.move_to,
+                lineTo=ctx.line_to,
+                curveTo=ctx.curve_to,
+                closePath=ctx.close_path,
                 )
         self.textRenderMode = 0
 
@@ -64,12 +65,12 @@ class GState:
 
     @property
     def ctm(self):
-        return mmult(tuple(self.canv.get_matrix()), self._out_transform)
+        return mmult(tuple(self.ctx.get_matrix()), self._out_transform)
 
     @ctm.setter
     def ctm(self,mx):
         nctm = mmult(self._in_transform,mx)
-        self.canv.set_matrix(cairo.Matrix(*nctm))
+        self.ctx.set_matrix(cairo.Matrix(*nctm))
 
     @property
     def fillColor(self):
@@ -89,59 +90,59 @@ class GState:
 
     @property
     def strokeWidth(self):
-        return self.canv.get_line_width()
+        return self.ctx.get_line_width()
 
     @strokeWidth.setter
     def strokeWidth(self, w):
-        return self.canv.set_line_width(w)
+        return self.ctx.set_line_width(w)
 
     @property
     def dashArray(self):
-        return self.canv.get_dash()
+        return self.ctx.get_dash()
 
     @dashArray.setter
     def dashArray(self, da):
         if not da:
             da = 0, []
-        return self.canv.set_dash(da[1], da[0])
+        return self.ctx.set_dash(da[1], da[0])
 
     #lucky Cairo uses the same linCap/Join number values as PDF
     @property
     def lineCap(self):
-        return int(self.canv.get_line_cap())
+        return int(self.ctx.get_line_cap())
 
     @lineCap.setter
     def lineCap(self, v):
-        return self.canv.set_line_cap(int(v))
+        return self.ctx.set_line_cap(int(v))
 
     @property
     def lineJoin(self):
-        return int(self.canv.get_line_join())
+        return int(self.ctx.get_line_join())
 
     @lineJoin.setter
     def lineJoin(self, v):
-        return self.canv.set_line_join(int(v))
+        return self.ctx.set_line_join(int(v))
 
     #the values are the other way round from PDF
     @property
     def fillMode(self):
-        return self.__fill_rule_values[int(self.canv.get_fill_rule())]
+        return self.__fill_rule_values[int(self.ctx.get_fill_rule())]
 
     @fillMode.setter
     def fillMode(self, v):
-        return self.canv.set_fill_rule(self.__fill_rule_values[int(v)])
+        return self.ctx.set_fill_rule(self.__fill_rule_values[int(v)])
 
     def beginPath(self):
-        self.canv.new_path()
+        self.ctx.new_path()
 
     def moveTo(self, x, y):
-        self.canv.move_to(float(x), float(y))
+        self.ctx.move_to(float(x), float(y))
 
     def lineTo(self, x, y):
-        self.canv.line_to(float(x), float(y))
+        self.ctx.line_to(float(x), float(y))
 
     def pathClose(self):
-        self.canv.close_path()
+        self.ctx.close_path()
 
     def pathFill(self,fillMode=None):
         if self.__fillColor:
@@ -149,28 +150,33 @@ class GState:
                 ofm = self.fillMode
                 if ofm!=fillMode: self.fillMode = fillMode
             self.__set_source_color__(self.__fillColor)
-            self.canv.fill_preserve()
+            self.ctx.fill_preserve()
             if fillMode is not None and ofm!=fillMode: self.fillMode = ofm
 
     def pathStroke(self):
         if self.__strokeColor and self.strokeWidth>0:
             self.__set_source_color__(self.__strokeColor)
-            self.canv.stroke_preserve()
+            self.ctx.stroke_preserve()
 
     def curveTo(self, x1, y1, x2, y2, x3, y3):
-        self.canv.curve_to(float(x1), float(y1),float(x2), float(y2),float(x3), float(y3))
+        self.ctx.curve_to(float(x1), float(y1),float(x2), float(y2),float(x3), float(y3))
 
     def pathBegin(self):
-        self.canv.new_path()
+        self.ctx.new_path()
 
     def clipPathClear(self):
-        raise NotImplementedError('clipPathClear')
+        self.ctx.rest_clip()
 
     def clipPathSet(self):
-        raise NotImplementedError('clipPathSet')
+        ctx = self.ctx
+        oPath = ctx.copy_path()
+        ctx.new_path()
+        ctx.clip()
+        ctx.new_path()
+        ctx.append_path(oPath)
 
     def clipPathAdd(self):
-        raise NotImplementedError('clipPathAdd')
+        self.ctx.clip_preserve()
 
     def setFont(self, fontName, fontSize):
         self.fontName = fontName
@@ -178,22 +184,21 @@ class GState:
 
     def drawString(self, x, y, text): 
         opMap = self.__pathOpMap__
-        P = self._text2PathDescription(text, x, y)
-        oPath = self.canv.copy_path()
+        oPath = self.ctx.copy_path()
         oFM = self.fillMode
         tRM = self.textRenderMode
         try:
-            self.canv.new_path()
-            for op in P:
-                #call one of canv.move_to/line_to/curve_to/close_path
+            self.ctx.new_path()
+            for op in self._text2PathDescription(text, x, y):
+                #call one of ctx.move_to/line_to/curve_to/close_path
                 opMap[op[0]](*op[1:])
             if tRM in (0,2,4,6):
                 self.pathFill(0)
             if tRM in (1,2,5,6):
                 self.pathStroke()
             if tRM>=4:
-                self.canv.clip_preserve()
+                self.ctx.clip_preserve()
         finally:
-            self.canv.new_path()
-            self.canv.append_path(oPath)
+            self.ctx.new_path()
+            self.ctx.append_path(oPath)
             self.fillMode = oFM
