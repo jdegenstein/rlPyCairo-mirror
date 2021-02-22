@@ -38,5 +38,6 @@ setup(
         str('Topic :: Utilities'),
     ],
     python_requires='>=3.6,<4',
+    install_requires=['pycairo>=1.20.0'],
     **setup_kwargs
     )
