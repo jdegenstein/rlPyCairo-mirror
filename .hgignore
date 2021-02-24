@@ -39,6 +39,9 @@ localsettings.py
 
 syntax: regexp
 ^bin/
+^tmp/
+^dist/
+^build/
 ^local/
 ^[Ii]nclude/
 ^[Ll]ib/
@@ -46,3 +49,4 @@ syntax: regexp
 ^[Ss]hare/
 ^[Ss]elenium/
 ^\.?py\d+/
+^rlPyCairo\.egg-info/

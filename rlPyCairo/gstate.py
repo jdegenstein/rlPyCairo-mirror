@@ -4,13 +4,14 @@ __all__ = (
 import sys, cairo
 from reportlab.lib.colors import toColor
 from reportlab.graphics.transform import mmult, inverse
+from PIL import Image as PILImage
 
-class GState:
+class GState(object):
     __fill_rule_values = {1:0, 0:1}
 
     def __init__(self, width=1, height=1, bg='white', fmt='RGB24'):
         self._fmt = fmt
-        self.surface = cairo.ImageSurface(getattr(cairo,'FORMAT_'+fmt), width, height)
+        self.surface = cairo.ImageSurface(self.__str2format(fmt), width, height)
         self.width = width
         self.height = height
         self.ctx = ctx = cairo.Context(self.surface)
@@ -36,7 +37,7 @@ class GState:
             def _text2PathDescription(text, x, y):
                 return text2PathDescription(
                                 text, x=x, y=y,
-                                fontName=self.fontName, fontSize= self.fontSize,
+                                fontName=self.fontName, fontSize=self.fontSize,
                                 truncate=False, gs=gs,
                                 )
             self._text2PathDescription = _text2PathDescription
@@ -49,6 +50,10 @@ class GState:
                 closePath=ctx.close_path,
                 )
         self.textRenderMode = 0
+
+    @staticmethod
+    def __str2format(fmt):
+        return getattr(cairo,'FORMAT_'+fmt)
 
     @property
     def pixBuf(self):
@@ -102,8 +107,12 @@ class GState:
 
     @dashArray.setter
     def dashArray(self, da):
-        if not da:
-            da = 0, []
+        if not da or not isinstance(da,(list,tuple)):
+            da = 0, ()
+        else:
+            if isinstance(da[0],(list,tuple)):
+                da = da[1],da[0]
+
         return self.ctx.set_dash(da[1], da[0])
 
     #lucky Cairo uses the same linCap/Join number values as PDF
@@ -202,3 +211,26 @@ class GState:
             self.ctx.new_path()
             self.ctx.append_path(oPath)
             self.fillMode = oFM
+
+    @classmethod
+    def __fromPIL(cls, im, fmt='RGB24', alpha=1.0, forceAlpha=False):
+        if 'A' not in im.getbands() or forceAlpha:
+            im.putalpha(int(alpha * 255))
+        fmt = cls.__str2format(fmt)
+        return cairo.ImageSurface.create_for_data(bytearray(im.tobytes('raw', 'BGRa')),
+                fmt, im.width, im.height,
+                cairo.ImageSurface.format_stride_for_width(fmt,im.width),
+                )
+
+    def _aapixbuf(self, x, y, dstW, dstH,
+                    data, srcW, srcH, planes=3,
+                    ):
+        ctx = self.ctx
+        ctx.save()
+        ctx.set_antialias(cairo.Antialias.DEFAULT)
+        ctx.set_operator(cairo.Operator.OVER)
+        ctx.translate(x,y+dstH)
+        ctx.scale(dstW/float(srcW),-dstH/float(srcH))
+        ctx.set_source_surface(self.__fromPIL(data,self._fmt, forceAlpha=False))
+        ctx.paint()
+        ctx.restore()
