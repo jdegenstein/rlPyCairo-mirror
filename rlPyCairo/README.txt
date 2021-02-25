@@ -23,11 +23,13 @@ _renderPM and the only place where it seems inferior is in the
 rendering of scaled images and the speed with which it draws
 text.
 
-At present the _renderPM extension will only use its mapping
-of ReportLab font names to extract paths for rendering this
-is no doubt the reason for its slowness when rendering text.
+At present the rlPyCairo backend only uses the _renderPM extension 
+to use its mapping of ReportLab font names to extract paths for
+rendering this is no doubt the reason for its slowness when
+rendering text.
 
-Currently we ar not making use of any of the abilities of PyCairo
+Currently we are not making use of any of the more advanced 
+abilities of PyCairo such as transparency, patterns etc,
 but that may change in the future.
 
 Contents of this file:
