@@ -6,16 +6,29 @@ README
 See ``LICENSE.txt`` for license details.
 
 This is a plugin for the ReportLab PDF Toolkit.
-of rich PDF documents, and also creation of charts in a variety
-of bitmap and vector formats.
+which constructs rich PDF documents, and also creation
+of charts in a variety of bitmap and vector formats.
 
-This library is also the foundation for our commercial product
-Report Markup Language (RML), available in the ReportLab PLUS
-package. RML offers many more features, a template-based style
-of document development familiar to all web developers, and
-higher development productivity.  Please consider trying out
-RML for your project, as the license sales support our open
-source development.
+This plugin is intended to replace most of the usage of the
+libart based C extension _renderPM which has been shown to
+have issues when rendering complex documents.
+
+This backend can be brought into use by setting 
+reportlab.rl_config.renderPMBackend = 'rlPyCairo'
+any of the methods detailed in reportlab/rl_config.py
+can be used to accomplish this.
+
+The new backend seems able to handle all the same behaviour as
+_renderPM and the only place where it seems inferior is in the
+rendering of scaled images and the speed with which it draws
+text.
+
+At present the _renderPM extension will only use its mapping
+of ReportLab font names to extract paths for rendering this
+is no doubt the reason for its slowness when rendering text.
+
+Currently we ar not making use of any of the abilities of PyCairo
+but that may change in the future.
 
 Contents of this file:
 
@@ -105,7 +118,9 @@ reportlab/rl_config.py to accomplish this.
 5. Test suite
 =============
 Tests are in the ``reportlab/tests/`` directory.  They can be executed by cd'ing into the
-directory and executing ``python runAll.py``, or from ``python setup.py tests``.
+directory and executing ``python runAll.py` with an envinment variable
+set as RL_renderPMBackend=rlPyCairo. Obviously you need to have rlPyCairo
+installed.
 
 6. Acknowledgements and Thanks
 ==============================
