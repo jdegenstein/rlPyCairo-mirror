@@ -8,7 +8,7 @@ setup(
     version=version,
     author=str('Robin Becker'),
     author_email=str('robin@reportlab.com'),
-    url=str('https://www.reportlab.com/pypi/rlPyCairo'),
+    url=str('https://hg.reportlab.com/hg-public/rlPyCairo'),
     long_description=open('rlPyCairo/README.txt').read(),
     keywords=str('reportlab renderPM'),
     packages=find_packages(exclude=['test']),
