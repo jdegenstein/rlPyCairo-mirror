@@ -1,7 +1,12 @@
 __all__ = (
         'GState',
         )
-import sys, cairo
+
+import sys
+try:
+    import cairocffi as cairo   #prefer cairocffi
+except ImportError:
+    import cairo
 from reportlab.lib.colors import toColor
 from reportlab.graphics.transform import mmult, inverse
 from PIL import Image as PILImage
@@ -21,7 +26,7 @@ class GState(object):
             self.__set_source_color__ = lambda c:ctx.set_source_rgba(*c.rgba())
         else:
             raise ValueError('Bad fmt=%r for rlPyCairo.GState' % fmt)
-        ctx.set_antialias(cairo.Antialias.BEST)
+        ctx.set_antialias(cairo.ANTIALIAS_BEST)
         self._in_transform = (1,0,0,-1,0,height)
         self._out_transform = inverse(self._in_transform)
         self.ctm = (1,0,0,1,0,0)
@@ -227,8 +232,8 @@ class GState(object):
                     ):
         ctx = self.ctx
         ctx.save()
-        ctx.set_antialias(cairo.Antialias.DEFAULT)
-        ctx.set_operator(cairo.Operator.OVER)
+        ctx.set_antialias(cairo.ANTIALIAS_DEFAULT)
+        ctx.set_operator(cairo.OPERATOR_OVER)
         ctx.translate(x,y+dstH)
         ctx.scale(dstW/float(srcW),-dstH/float(srcH))
         ctx.set_source_surface(self.__fromPIL(data,self._fmt, forceAlpha=False))
