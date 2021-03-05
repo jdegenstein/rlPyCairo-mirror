@@ -9,7 +9,7 @@ setup(
     author=str('Robin Becker'),
     author_email=str('robin@reportlab.com'),
     url=str('https://hg.reportlab.com/hg-public/rlPyCairo'),
-    long_description=open('rlPyCairo/README.txt').read(),
+    long_description=open('README.txt').read(),
     keywords=str('reportlab renderPM'),
     packages=find_packages(exclude=['test']),
     license="BSD license, Copyright (c) 2000-2021, ReportLab Inc.",

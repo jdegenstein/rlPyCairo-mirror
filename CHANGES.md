@@ -9,6 +9,12 @@ Full code is available using mercurial see https://hg.reportlab.com/hg-public/rl
 The contributors lists are in no order and apologies to those accidentally not
 mentioned. If we missed you, please let us know!
 
+CHANGES  0.0.7	 05/03/2021
+---------------------------
+	* ensure compatibility with pycairo and cairocffi
+	* fix up the MANIFEST properly
+	* fixes to README etc
+
 CHANGES  0.0.3	 24/02/2021
 ---------------------------
 	* minor fixes to dash array and the slow path based drawString
