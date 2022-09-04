@@ -8,11 +8,11 @@ try:
 except ImportError:
     import cairo
 from reportlab.lib.colors import toColor
-from reportlab.graphics.transform import mmult, inverse
+from reportlab.graphics.transform import mmult
 from PIL import Image as PILImage
 
 class GState(object):
-    __fill_rule_values = {1:0, 0:1}
+    __fill_rule_values = (1,0)
 
     def __init__(self, width=1, height=1, bg='white', fmt='RGB24'):
         self._fmt = fmt
@@ -27,8 +27,7 @@ class GState(object):
         else:
             raise ValueError('Bad fmt=%r for rlPyCairo.GState' % fmt)
         ctx.set_antialias(cairo.ANTIALIAS_BEST)
-        self._in_transform = (1,0,0,-1,0,height)
-        self._out_transform = inverse(self._in_transform)
+        self._in_transform = self._out_transform = (1,0,0,-1,0,height)
         self.ctm = (1,0,0,1,0,0)
         self.fillColor = bg
         ctx.rectangle(0,0,width,height)
@@ -75,7 +74,7 @@ class GState(object):
 
     @property
     def ctm(self):
-        return mmult(tuple(self.ctx.get_matrix()), self._out_transform)
+        return mmult(self._out_transform,tuple(self.ctx.get_matrix()))
 
     @ctm.setter
     def ctm(self,mx):

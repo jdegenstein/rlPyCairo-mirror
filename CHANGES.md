@@ -9,6 +9,11 @@ Full code is available using mercurial see https://hg.reportlab.com/hg-public/rl
 The contributors lists are in no order and apologies to those accidentally not
 mentioned. If we missed you, please let us know!
 
+CHANGES  0.0.8	 02/09/2022
+---------------------------
+	* fix ctm handling
+	* make GState fill_rule_values a tuple
+
 CHANGES  0.0.7	 05/03/2021
 ---------------------------
 	* ensure compatibility with pycairo and cairocffi
