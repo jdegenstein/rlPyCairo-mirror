@@ -31,6 +31,6 @@ setup(
         str('Programming Language :: Python :: 3.9'),
         str('Topic :: Utilities'),
     ],
-    python_requires='>=2.7, >=3.6, <4',
+    python_requires='>=3.6, <4',
     install_requires=['pycairo>=1.20.0','reportlab>=3.5.61'],
     )

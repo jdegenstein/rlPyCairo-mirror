@@ -35,9 +35,13 @@ class GState(object):
         self.pathBegin()
         self.__fillColor = self.__strokeColor = None
         def _text2PathDescription(text, x, y):
-            from reportlab.graphics._renderPM import gstate
-            from reportlab.graphics.utils import text2PathDescription
-            gs = gstate(1,1)
+            try:
+                from reportlab.graphics.utils import text2PathDescription, FTTextPath
+                gs = FTTextPath()
+            except ImportError:
+                from reportlab.graphics._renderPM import gstate
+                from reportlab.graphics.utils import text2PathDescription
+                gs = gstate(1,1)
             def _text2PathDescription(text, x, y):
                 return text2PathDescription(
                                 text, x=x, y=y,

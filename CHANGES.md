@@ -9,6 +9,11 @@ Full code is available using mercurial see https://hg.reportlab.com/hg-public/rl
 The contributors lists are in no order and apologies to those accidentally not
 mentioned. If we missed you, please let us know!
 
+CHANGES  0.1.0	 17/10/2022
+---------------------------
+	* added pil2pict functionality
+	* allow import & use of FTTextPath if available
+
 CHANGES  0.0.8	 02/09/2022
 ---------------------------
 	* fix ctm handling
