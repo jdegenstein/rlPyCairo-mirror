@@ -39,7 +39,13 @@ class GState(object):
                 from reportlab.graphics.utils import text2PathDescription, FTTextPath
                 gs = FTTextPath()
             except ImportError:
-                from reportlab.graphics._renderPM import gstate
+                try:
+                    from _rl_renderPM import gstate
+                except ImportError:
+                    try:
+                        from reportlab.graphics._renderPM import gstate
+                    except ImportError as _e:
+                        raise ImportError('freetype-py is not installed and no libart based _renderPM can be imported') from _e
                 from reportlab.graphics.utils import text2PathDescription
                 gs = gstate(1,1)
             def _text2PathDescription(text, x, y):
