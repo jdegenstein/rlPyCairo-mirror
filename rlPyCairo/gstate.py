@@ -72,14 +72,18 @@ class GState(object):
     @property
     def pixBuf(self):
         ba = self.surface.get_data()
+        #despite the name they store it in 32 bits; we need to remove 8
+        ba = bytearray(ba)
+        if sys.byteorder=='little':
+            #BGRA --> RGBA
+            for i in range(0,len(ba),4):
+                ba[i:i+3] = bytearray(reversed(ba[i:i+3]))
+        else:
+            #ARGB --> RGBA
+            for i in range(0,len(ba),4):
+                ba[i+3],ba[i:i+3] = ba[i],ba[i+1:i+4]
         if self._fmt=='RGB24':
-            #despite the name they store it in 32 bits; we need to remove 8
-            ba = bytearray(ba)
-            if sys.byteorder=='little':
-                #we expect spare blue green red 
-                for i in range(0,len(ba),4):
-                    ba[i:i+4] = bytearray(reversed(ba[i:i+4]))
-            del ba[0::4] #we have spare red green blue so remove the spare
+            del ba[3::4] #we have red green blue spare
         return bytes(ba)
 
     @property
@@ -228,10 +232,31 @@ class GState(object):
 
     @classmethod
     def __fromPIL(cls, im, fmt='RGB24', alpha=1.0, forceAlpha=False):
-        if 'A' not in im.getbands() or forceAlpha:
+        mode = im.mode
+        im = im.copy()
+        argb = fmt=='ARGB32'
+        if mode=='RGB':
             im.putalpha(int(alpha * 255))
+            if alpha!=1 and argb: im = im.convert('RGBa')
+        elif mode=='RGBA' or forceAlpha:
+            if forceAlpha:
+                im.putalpha(int(alpha * 255))
+            if argb: im = im.convert('RGBa')
+        elif mode=='RGBa' or forceAlpha:
+            if forceAlpha:
+                im = im.convert('RGBA')
+                im.putalpha(int(alpha * 255))
+                if argb: im = im.convert('RGBa')
         fmt = cls.__str2format(fmt)
-        return cairo.ImageSurface.create_for_data(bytearray(im.tobytes('raw', 'BGRa')),
+        # TODO need to fix this up for bigendian when cairo order is not BGRa
+        if sys.byteorder=='little':
+            ba = im.tobytes('raw','BGRa')
+        else:
+            ba = bytearray(im.tobytes('raw','RGBa'))
+            for i in range(0,len(ba),4):
+                ba[i],ba[i+1:i+4] = ba[i+3],ba[i:i+3]
+            ba = bytes(ba)
+        return cairo.ImageSurface.create_for_data(bytearray(ba),
                 fmt, im.width, im.height,
                 cairo.ImageSurface.format_stride_for_width(fmt,im.width),
                 )

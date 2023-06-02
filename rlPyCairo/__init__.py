@@ -1,7 +1,7 @@
 '''
 package using pycairo to allow better bitmap rendering
 '''
-__version__ = '0.2.0'
+__version__ = '0.3.0'
 __all__ = (
         'GState',
         'pil2pict',
