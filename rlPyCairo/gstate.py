@@ -3,10 +3,11 @@ __all__ = (
         )
 
 import sys
-try:
-    import cairocffi as cairo   #prefer cairocffi
-except ImportError:
-    import cairo
+# try:
+#     import cairocffi as cairo   #prefer cairocffi
+# except ImportError:
+#     import cairo
+import cairo #prefer cairo
 from reportlab.lib.colors import toColor
 from reportlab.graphics.transform import mmult
 from PIL import Image as PILImage
